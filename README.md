@@ -1,28 +1,45 @@
-Pipeline Description: This pipeline is designed for ancient Spanish text detection and transcription using a combination of LLMs and a fine-tuned vision–language model.
+## Pipeline Overview
 
-Approach: Florence-2 was used for primary text detection and segmentation. The segmented text regions were then passed to a fine-tuned Qwen2-VL (2B) model optimized for line-level recognition. In parallel, the original image was processed by Gemini using a custom prompt, and the outputs from both models were stored. After image preprocessing—specifically Sauvola thresholding and skeletonization—the preprocessed image, Gemini’s prediction, and Qwen’s prediction were provided to a final Judge LLM. This ensemble step resolves discrepancies between the models, improving spelling accuracy and overall transcription reliability.
+This project focuses on handwritten text recognition (HTR) for Early Modern Spanish manuscripts using a multi-model ensemble architecture that combines vision-language models and large language models.
 
-Input Image
-   │
-   ▼
-Florence-2 (Text Detection & Segmentation)
-   │
-   ▼
-Text Lines → Qwen2-VL (Line Recognition)
-   │
-Original Image → Gemini (Prediction)
-   │
-Preprocessing (Sauvola + Skeletonization)
-   │
-   ▼
-Judge LLM (Combine Qwen + Gemini + Image)
-   │
-   ▼
-Final Transcription
-Evaluation Metrics
-CER Score: 8.92% (pg. 20)
-cer_score
-BERTScore: 91% (pg. 20)
-bert_score
-WER Score: 30% (pg. 21)
-The higher WER is mainly due to word-level mismatches.
+### Methodology
+
+The pipeline begins with **Florence-2**, which performs text detection and segmentation on the input manuscript image. The extracted text lines are then transcribed using a **fine-tuned Qwen2-VL (2B)** model optimized for line-level recognition.
+
+In parallel, the original manuscript image is processed by **Gemini** using a task-specific transcription prompt. Both transcription outputs are retained for downstream verification.
+
+To improve recognition quality, the manuscript image is additionally enhanced using **Sauvola thresholding** and **skeletonization**. The preprocessed image, along with the Qwen2-VL and Gemini predictions, is provided to a final **Judge LLM**, which resolves disagreements between models and produces the final transcription.
+
+### Pipeline Architecture
+
+```mermaid
+flowchart TD
+    A[Input Manuscript Image] --> B[Florence-2 Text Detection and Segmentation]
+    B --> C[Extracted Text Lines]
+    C --> D[Fine-tuned Qwen2-VL 2B]
+
+    A --> E[Gemini Transcription]
+    A --> F[Sauvola Thresholding + Skeletonization]
+
+    D --> G[Judge LLM]
+    E --> G
+    F --> G
+
+    G --> H[Final Transcription]
+```
+
+## Evaluation Results
+
+| Metric                     | Score |
+| -------------------------- | ----- |
+| Character Error Rate (CER) | 8.92% |
+| BERTScore                  | 0.91  |
+| Word Error Rate (WER)      | 30%   |
+
+### Analysis
+
+The system achieved a **CER of 8.92%** and a **BERTScore of 0.91**, indicating strong character-level accuracy and semantic similarity to the ground-truth transcriptions.
+
+The comparatively higher **WER (30%)** is primarily caused by word-level mismatches, historical spelling variations, abbreviation expansion differences, and tokenization inconsistencies common in Early Modern Spanish manuscripts.
+
+These results demonstrate that the proposed ensemble architecture can effectively transcribe challenging historical documents while maintaining strong semantic fidelity.
